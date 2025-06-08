@@ -1,0 +1,501 @@
+---
+title: Blockchain API Aggregation MCP Planning
+description: Comprehensive planning document for blockchain API aggregation system using MCP protocol
+---
+
+# Blockchain API Aggregation MCP System Planning
+
+## Project Overview
+
+This document outlines the planning for a NestJS-based blockchain API aggregation system that provides unified blockchain data access interfaces for AI assistants through the MCP (Model Context Protocol).
+
+### Objectives
+
+- Replace existing CoinGecko API dependencies
+- Aggregate multiple blockchain data sources
+- Provide unified MCP interfaces
+- Support multi-chain data queries
+- Implement data caching and fault tolerance mechanisms
+
+## System Architecture
+
+<Mermaid chart={`graph TB
+    subgraph "AI Clients"
+        A[Claude Desktop]
+        B[Other AI Assistants]
+    end
+    
+    subgraph "MCP Layer"
+        C[MCP Server]
+        D[JSON-RPC Interface]
+    end
+    
+    subgraph "NestJS API Aggregation Layer"
+        E[API Gateway]
+        F[Data Aggregation Service]
+        G[Redis Cache Layer]
+        H[PostgreSQL Database]
+    end
+    
+    subgraph "External Data Sources"
+        I[CoinGecko API]
+        J[CoinMarketCap API]
+        K[DeFiPulse API]
+        L[Etherscan API]
+        M[BSCScan API]
+        N[Polygonscan API]
+        O[On-chain RPC Nodes]
+    end
+    
+    A --> C
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    F --> I
+    F --> J
+    F --> K
+    F --> L
+    F --> M
+    F --> N
+    F --> O
+`} />
+
+## Technology Stack
+
+### Backend (NestJS)
+
+- **Framework**: NestJS + Express + TypeScript
+- **Database**: PostgreSQL (main database) + Redis (cache)
+- **ORM**: TypeORM
+- **API Documentation**: Swagger/OpenAPI
+- **Monitoring**: Prometheus + Grafana
+- **Logging**: Winston
+
+### MCP Layer
+
+- **Protocol**: JSON-RPC 2.0
+- **Transport**: HTTP/WebSocket
+- **Schema**: Custom MCP Schema
+
+### Deployment
+
+- **Containerization**: Docker + Docker Compose
+- **Cloud Platform**: AWS ECS/EKS
+- **CI/CD**: GitHub Actions
+- **Monitoring**: CloudWatch + Custom Metrics
+
+## Data Source Planning
+
+### 1. Price Data Sources
+
+| Data Source | Purpose | Priority | Limitations |
+|-------------|---------|----------|-------------|
+| CoinGecko | Primary price data | High | Free: 30 calls/min |
+| CoinMarketCap | Backup price data | Medium | Free: 333 calls/day |
+| Binance API | Real-time trading data | High | 1200 requests/min |
+| Uniswap Subgraph | DEX price data | Medium | Unlimited |
+
+### 2. On-chain Data Sources
+
+| Blockchain | Data Source | Purpose | API Type |
+|------------|-------------|---------|----------|
+| Ethereum | Etherscan | Transactions, balances, contracts | REST API |
+| Ethereum | Infura/Alchemy | On-chain queries | JSON-RPC |
+| BSC | BSCScan | Transactions, balances, contracts | REST API |
+| Polygon | Polygonscan | Transactions, balances, contracts | REST API |
+| Arbitrum | Arbiscan | L2 data | REST API |
+| Optimism | Optimistic Etherscan | L2 data | REST API |
+
+## NestJS API Design
+
+### Project Structure
+
+```
+src/
+├── app.module.ts
+├── main.ts
+├── common/
+│   ├── decorators/
+│   ├── filters/
+│   ├── guards/
+│   ├── interceptors/
+│   └── pipes/
+├── config/
+│   ├── database.config.ts
+│   ├── redis.config.ts
+│   └── api.config.ts
+├── modules/
+│   ├── price/
+│   │   ├── price.module.ts
+│   │   ├── price.service.ts
+│   │   ├── price.controller.ts
+│   │   └── dto/
+│   ├── blockchain/
+│   │   ├── blockchain.module.ts
+│   │   ├── services/
+│   │   │   ├── ethereum.service.ts
+│   │   │   ├── bsc.service.ts
+│   │   │   └── polygon.service.ts
+│   │   └── dto/
+│   ├── defi/
+│   │   ├── defi.module.ts
+│   │   ├── defi.service.ts
+│   │   └── dto/
+│   ├── aggregator/
+│   │   ├── aggregator.module.ts
+│   │   ├── aggregator.service.ts
+│   │   └── strategies/
+│   ├── cache/
+│   │   ├── cache.module.ts
+│   │   └── cache.service.ts
+│   └── mcp/
+│       ├── mcp.module.ts
+│       ├── mcp.controller.ts
+│       ├── mcp.service.ts
+│       └── schemas/
+└── entities/
+    ├── price.entity.ts
+    ├── transaction.entity.ts
+    └── token.entity.ts
+```
+
+### Core API Endpoints
+
+#### 1. Price-related APIs
+
+```typescript
+// GET /api/v1/price/current
+// Get current prices
+interface CurrentPriceRequest {
+  tokens: string[];        // ['BTC', 'ETH', 'USDT']
+  currencies: string[];    // ['USD', 'EUR', 'CNY']
+  sources?: string[];      // ['coingecko', 'binance']
+}
+
+// GET /api/v1/price/historical
+// Get historical prices
+interface HistoricalPriceRequest {
+  token: string;
+  currency: string;
+  from: string;           // ISO 8601 date
+  to: string;
+  interval: '1h' | '1d' | '1w';
+}
+
+// GET /api/v1/price/market-data
+// Get market data
+interface MarketDataRequest {
+  tokens: string[];
+  include: ('market_cap' | 'volume' | 'change_24h')[];
+}
+```
+
+#### 2. Blockchain Data APIs
+
+```typescript
+// GET /api/v1/blockchain/balance
+// Get address balance
+interface BalanceRequest {
+  address: string;
+  chain: 'ethereum' | 'bsc' | 'polygon';
+  tokens?: string[];      // Token contract addresses
+}
+
+// GET /api/v1/blockchain/transactions
+// Get transaction history
+interface TransactionRequest {
+  address: string;
+  chain: string;
+  limit?: number;
+  offset?: number;
+  from_block?: number;
+}
+
+// GET /api/v1/blockchain/token-info
+// Get token information
+interface TokenInfoRequest {
+  contract: string;
+  chain: string;
+}
+```
+
+#### 3. DeFi Data APIs
+
+```typescript
+// GET /api/v1/defi/tvl
+// Get TVL data
+interface TVLRequest {
+  protocols?: string[];
+  chains?: string[];
+}
+
+// GET /api/v1/defi/yields
+// Get yield data
+interface YieldsRequest {
+  protocols: string[];
+  min_tvl?: number;
+}
+
+// GET /api/v1/defi/pools
+// Get liquidity pool data
+interface PoolsRequest {
+  dex: 'uniswap' | 'pancakeswap' | 'quickswap';
+  tokens?: string[];
+}
+```
+
+## MCP Interface Design
+
+### MCP Schema Definition
+
+```typescript
+// mcp-schema.ts
+export const mcpSchema = {
+  jsonrpc: "2.0",
+  methods: {
+    // Price queries
+    getTokenPrice: {
+      type: "function",
+      description: "Get current token prices",
+      parameters: {
+        type: "object",
+        properties: {
+          tokens: {
+            type: "array",
+            items: { type: "string" },
+            description: "List of token symbols"
+          },
+          currencies: {
+            type: "array",
+            items: { type: "string" },
+            description: "List of target currencies"
+          },
+          sources: {
+            type: "array",
+            items: { type: "string" },
+            description: "List of data sources (optional)"
+          }
+        },
+        required: ["tokens", "currencies"]
+      }
+    },
+    
+    // Market data
+    getMarketData: {
+      type: "function",
+      description: "Get market data",
+      parameters: {
+        type: "object",
+        properties: {
+          tokens: {
+            type: "array",
+            items: { type: "string" }
+          },
+          metrics: {
+            type: "array",
+            items: {
+              type: "string",
+              enum: ["market_cap", "volume", "change_24h", "change_7d"]
+            }
+          }
+        },
+        required: ["tokens"]
+      }
+    },
+    
+    // Blockchain queries
+    getBalance: {
+      type: "function",
+      description: "Get wallet balance",
+      parameters: {
+        type: "object",
+        properties: {
+          address: { type: "string" },
+          chain: {
+            type: "string",
+            enum: ["ethereum", "bsc", "polygon", "arbitrum"]
+          },
+          tokens: {
+            type: "array",
+            items: { type: "string" },
+            description: "Token contract addresses (optional)"
+          }
+        },
+        required: ["address", "chain"]
+      }
+    }
+  }
+};
+```
+
+## Implementation Plan
+
+### Phase 1: Basic Infrastructure (2-3 weeks)
+
+- [ ] NestJS project initialization
+- [ ] Database design and migration
+- [ ] Redis cache configuration
+- [ ] Basic API framework setup
+- [ ] Docker containerization
+
+### Phase 2: Core Features (3-4 weeks)
+
+- [ ] Price data aggregation service
+- [ ] Blockchain data query service
+- [ ] Data source adapter development
+- [ ] Cache strategy implementation
+- [ ] Error handling and retry mechanisms
+
+### Phase 3: MCP Integration (2 weeks)
+
+- [ ] MCP Schema definition
+- [ ] JSON-RPC interface implementation
+- [ ] MCP client testing
+- [ ] Documentation writing
+
+### Phase 4: Advanced Features (2-3 weeks)
+
+- [ ] DeFi data integration
+- [ ] Real-time data push
+- [ ] Advanced aggregation algorithms
+- [ ] Performance optimization
+
+### Phase 5: Deployment and Monitoring (1-2 weeks)
+
+- [ ] AWS deployment configuration
+- [ ] Monitoring system setup
+- [ ] Alert configuration
+- [ ] Load testing
+- [ ] Production environment release
+
+## Cost Estimation
+
+### Infrastructure Costs (Monthly)
+
+| Service | Configuration | Cost (USD) |
+|---------|---------------|------------|
+| ECS Fargate | 2 vCPU, 4GB RAM | $50-70 |
+| RDS PostgreSQL | db.t3.micro | $15-20 |
+| ElastiCache Redis | cache.t3.micro | $15-20 |
+| ALB | Load balancer | $20-25 |
+| CloudWatch | Logs and monitoring | $10-15 |
+| **Total** | | **$110-150** |
+
+### API Costs (Monthly)
+
+| Service | Plan | Cost (USD) |
+|---------|------|------------|
+| CoinGecko | Pro Plan | $129 |
+| CoinMarketCap | Basic Plan | $99 |
+| Etherscan | Standard Plan | $99 |
+| **Total** | | **$327** |
+
+## Monitoring and Alerting
+
+### 1. Key Metrics
+
+- **Performance Metrics**
+  - API response time
+  - Data source availability
+  - Cache hit rate
+  - Error rate
+
+- **Business Metrics**
+  - Request volume statistics
+  - Data source usage distribution
+  - User activity
+  - Cost analysis
+
+### 2. Alert Configuration
+
+```yaml
+# CloudWatch Alarms
+alarms:
+  - name: HighErrorRate
+    metric: ErrorRate
+    threshold: 5%
+    period: 5m
+    
+  - name: HighResponseTime
+    metric: ResponseTime
+    threshold: 2000ms
+    period: 5m
+    
+  - name: LowCacheHitRate
+    metric: CacheHitRate
+    threshold: 80%
+    period: 10m
+```
+
+### 3. Dashboard Configuration
+
+<Mermaid chart={`graph TB
+    subgraph "Monitoring Dashboard"
+        A[API Performance]
+        B[Data Source Health]
+        C[Cache Metrics]
+        D[Error Tracking]
+        E[Cost Analysis]
+    end
+    
+    subgraph "Data Sources"
+        F[CloudWatch]
+        G[Application Logs]
+        H[Custom Metrics]
+    end
+    
+    F --> A
+    F --> B
+    G --> D
+    H --> C
+    H --> E
+`} />
+
+## Migration Guide
+
+### From Existing CoinGecko MCP Migration
+
+1. **Maintain Backward Compatibility**
+   ```typescript
+   // Preserve original MCP methods
+   const legacyMethods = {
+     ping: this.ping.bind(this),
+     getPrice: this.getTokenPrice.bind(this), // Map to new method
+     getSupportedVsCurrencies: this.getSupportedCurrencies.bind(this)
+   };
+   ```
+
+2. **Progressive Migration**
+   - Phase 1: Deploy new API, maintain original interfaces
+   - Phase 2: Add new features and methods
+   - Phase 3: Gradually deprecate old interfaces
+
+3. **Configuration Update**
+   ```json
+   {
+     "mcpServers": {
+       "blockchain-api": {
+         "command": "npx",
+         "args": [
+           "@modelcontextprotocol/server-fetch",
+           "http://YOUR_NEW_API_URL/mcp/rpc"
+         ]
+       }
+     }
+   }
+   ```
+
+## Related Resources
+
+- [NestJS Official Documentation](https://nestjs.com/)
+- [TypeORM Documentation](https://typeorm.io/)
+- [Redis Caching Strategies](https://redis.io/docs/manual/patterns/)
+- [MCP Protocol Specification](https://modelcontextprotocol.io/)
+- [Blockchain APIs Documentation Collection](https://github.com/blockchain-apis)
+
+---
+
+**Next Step**: Begin implementing Phase 1 basic infrastructure setup. It's recommended to start with NestJS project framework and database design.

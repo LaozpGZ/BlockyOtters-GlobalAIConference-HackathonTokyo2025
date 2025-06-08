@@ -1,0 +1,14 @@
+{
+  "title": "Documentation",
+  "pages": [
+    {
+      "title": "🦦 BlockyOtters",
+      "url": "/docs"
+    },
+    "overview",
+    "mcp-tutorial",
+    "aws-deployment",
+    "project-analysis",
+    "blockchain-api-aggregation"
+  ]
+}

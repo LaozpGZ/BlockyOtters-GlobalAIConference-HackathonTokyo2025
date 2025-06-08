@@ -1,0 +1,345 @@
+---
+title: MCP Usage Tutorial
+description: Complete guide for configuring and using BlockyOtters MCP server with AI assistants like Claude
+---
+
+# MCP Usage Tutorial
+
+## Overview
+
+This tutorial will guide you through configuring and using the BlockyOtters MCP server for AI assistants like Claude. The Model Context Protocol (MCP) enables AI systems to securely access external data sources and tools.
+
+## Prerequisites
+
+- Node.js 18+ installed
+- Claude Desktop application
+- BlockyOtters API key (optional, for Pro features)
+
+## Server Configuration
+
+### Check Server Status
+
+Before configuring Claude Desktop, ensure your BlockyOtters MCP server is running:
+
+```bash
+# Check if server is running
+curl http://localhost:3000/api/ping
+
+# Expected response:
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+### Configure Claude Desktop
+
+1. **Locate the configuration file**:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+2. **Add the MCP server configuration**:
+
+```json
+{
+  "mcpServers": {
+    "blocky-otters-api": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-fetch",
+        "http://localhost:3000/rpc"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+3. **Restart Claude Desktop** to apply the configuration.
+
+## Available MCP Tools
+
+### 1. ping
+
+**Function**: Test API connection status
+
+**Parameters**: None
+
+**Example Usage**:
+```
+Please ping the BlockyOtters API to check if it's working.
+```
+
+**Response**:
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+### 2. getPrice
+
+**Function**: Get cryptocurrency prices
+
+**Parameters**:
+- `ids` (string): Comma-separated cryptocurrency IDs (e.g., "bitcoin,ethereum")
+- `vs_currencies` (string): Target currencies (e.g., "usd,eur")
+- `include_market_cap` (boolean, optional): Include market cap data
+- `include_24hr_vol` (boolean, optional): Include 24h volume data
+- `include_24hr_change` (boolean, optional): Include 24h price change
+- `include_last_updated_at` (boolean, optional): Include last update timestamp
+
+**Example Usage**:
+```
+Get the current price of Bitcoin and Ethereum in USD and EUR, including market cap and 24h change.
+```
+
+**Response**:
+```json
+{
+  "bitcoin": {
+    "usd": 45000,
+    "eur": 38000,
+    "usd_market_cap": 850000000000,
+    "eur_market_cap": 720000000000,
+    "usd_24h_change": 2.5,
+    "eur_24h_change": 2.3
+  },
+  "ethereum": {
+    "usd": 3200,
+    "eur": 2700,
+    "usd_market_cap": 380000000000,
+    "eur_market_cap": 320000000000,
+    "usd_24h_change": 1.8,
+    "eur_24h_change": 1.6
+  }
+}
+```
+
+### 3. getSupportedVsCurrencies
+
+**Function**: Get list of supported target currencies
+
+**Parameters**: None
+
+**Example Usage**:
+```
+What currencies are supported for price conversion?
+```
+
+**Response**:
+```json
+[
+  "btc", "eth", "ltc", "bch", "bnb", "eos", "xrp", "xlm", "link", "dot",
+  "yfi", "usd", "aed", "ars", "aud", "bdt", "bhd", "bmd", "brl", "cad",
+  "chf", "clp", "cny", "czk", "dkk", "eur", "gbp", "hkd", "huf", "idr",
+  "ils", "inr", "jpy", "krw", "kwd", "lkr", "mmk", "mxn", "myr", "ngn",
+  "nok", "nzd", "php", "pkr", "pln", "rub", "sar", "sek", "sgd", "thb",
+  "try", "twd", "uah", "vef", "vnd", "zar", "xdr", "xag", "xau", "bits",
+  "sats"
+]
+```
+
+### 4. getCoinMarkets
+
+**Function**: Get comprehensive market data for cryptocurrencies
+
+**Parameters**:
+- `vs_currency` (string): Target currency (default: "usd")
+- `ids` (string, optional): Comma-separated cryptocurrency IDs
+- `category` (string, optional): Filter by category
+- `order` (string, optional): Sort order (market_cap_desc, gecko_desc, etc.)
+- `per_page` (number, optional): Results per page (1-250, default: 100)
+- `page` (number, optional): Page number (default: 1)
+- `sparkline` (boolean, optional): Include sparkline data
+- `price_change_percentage` (string, optional): Include price change percentages
+
+**Example Usage**:
+```
+Get market data for the top 10 cryptocurrencies by market cap, including 7-day price changes.
+```
+
+**Response**:
+```json
+[
+  {
+    "id": "bitcoin",
+    "symbol": "btc",
+    "name": "Bitcoin",
+    "image": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
+    "current_price": 45000,
+    "market_cap": 850000000000,
+    "market_cap_rank": 1,
+    "fully_diluted_valuation": 945000000000,
+    "total_volume": 25000000000,
+    "high_24h": 46000,
+    "low_24h": 44000,
+    "price_change_24h": 1000,
+    "price_change_percentage_24h": 2.27,
+    "price_change_percentage_7d_in_currency": 5.5,
+    "market_cap_change_24h": 19000000000,
+    "market_cap_change_percentage_24h": 2.28,
+    "circulating_supply": 19500000,
+    "total_supply": 21000000,
+    "max_supply": 21000000,
+    "ath": 69000,
+    "ath_change_percentage": -34.78,
+    "ath_date": "2021-11-10T14:24:11.849Z",
+    "atl": 67.81,
+    "atl_change_percentage": 66245.5,
+    "atl_date": "2013-07-06T00:00:00.000Z",
+    "last_updated": "2024-01-15T10:30:00.000Z"
+  }
+]
+```
+
+## Usage Examples
+
+### Example 1: Basic Price Query
+
+**User Query**:
+```
+What's the current price of Bitcoin in USD?
+```
+
+**Claude Response**:
+```
+I'll check the current Bitcoin price for you.
+
+[Uses getPrice tool with ids="bitcoin" and vs_currencies="usd"]
+
+The current price of Bitcoin is $45,000 USD.
+```
+
+### Example 2: Multi-Currency Comparison
+
+**User Query**:
+```
+Compare Bitcoin and Ethereum prices in USD, EUR, and JPY with 24-hour changes.
+```
+
+**Claude Response**:
+```
+I'll get the current prices for Bitcoin and Ethereum in multiple currencies with 24-hour changes.
+
+[Uses getPrice tool with comprehensive parameters]
+
+Here's the comparison:
+
+**Bitcoin (BTC)**:
+- USD: $45,000 (+2.5% 24h)
+- EUR: €38,000 (+2.3% 24h)
+- JPY: ¥6,750,000 (+2.7% 24h)
+
+**Ethereum (ETH)**:
+- USD: $3,200 (+1.8% 24h)
+- EUR: €2,700 (+1.6% 24h)
+- JPY: ¥480,000 (+2.0% 24h)
+
+Both cryptocurrencies are showing positive momentum over the past 24 hours.
+```
+
+### Example 3: Market Analysis
+
+**User Query**:
+```
+Show me the top 5 cryptocurrencies by market cap with their performance metrics.
+```
+
+**Claude Response**:
+```
+I'll retrieve the top 5 cryptocurrencies by market cap with detailed performance metrics.
+
+[Uses getCoinMarkets tool with per_page=5 and comprehensive data]
+
+Here are the top 5 cryptocurrencies by market cap:
+
+1. **Bitcoin (BTC)** - Rank #1
+   - Price: $45,000
+   - Market Cap: $850B
+   - 24h Change: +2.27%
+   - 7d Change: +5.5%
+   - Volume: $25B
+
+2. **Ethereum (ETH)** - Rank #2
+   - Price: $3,200
+   - Market Cap: $380B
+   - 24h Change: +1.8%
+   - 7d Change: +3.2%
+   - Volume: $15B
+
+[... continues for top 5]
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection Failed**
+   - Verify server is running on correct port
+   - Check firewall settings
+   - Ensure correct URL in configuration
+
+2. **Authentication Errors**
+   - Verify API key is correctly set
+   - Check API key permissions
+   - Ensure proper environment variables
+
+3. **Rate Limiting**
+   - Reduce request frequency
+   - Implement proper caching
+   - Consider upgrading to Pro API
+
+### Debug Commands
+
+```bash
+# Test server connectivity
+curl -X POST http://localhost:3000/rpc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "ping",
+    "params": {},
+    "id": 1
+  }'
+
+# Test price endpoint
+curl -X POST http://localhost:3000/rpc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "getPrice",
+    "params": {
+      "ids": "bitcoin",
+      "vs_currencies": "usd"
+    },
+    "id": 1
+  }'
+```
+
+## Best Practices
+
+1. **Efficient Querying**
+   - Batch multiple requests when possible
+   - Use appropriate time intervals for updates
+   - Cache frequently accessed data
+
+2. **Error Handling**
+   - Always check response status
+   - Implement retry logic for failed requests
+   - Handle rate limiting gracefully
+
+3. **Security**
+   - Keep API keys secure
+   - Use HTTPS in production
+   - Regularly rotate credentials
+
+4. **Performance**
+   - Monitor API usage and costs
+   - Optimize query parameters
+   - Use appropriate data refresh intervals

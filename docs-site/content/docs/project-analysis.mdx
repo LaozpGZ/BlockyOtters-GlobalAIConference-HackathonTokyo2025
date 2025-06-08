@@ -1,0 +1,275 @@
+---
+title: Project Analysis
+description: Comprehensive analysis of BlockyOtters API Server MCP project architecture and implementation
+---
+
+# Project Analysis
+
+## Project Overview
+
+BlockyOtters API Server MCP is a cryptocurrency data API server based on Node.js and Express, implementing the MCP (Model Context Protocol), allowing AI systems (such as Claude) to access BlockyOtters cryptocurrency market data through standardized interfaces.
+
+## Technology Stack
+
+- **Backend Framework**: Node.js + Express.js
+- **API Client**: blocky-otters-api-v3
+- **JSON-RPC**: jayson
+- **Environment Configuration**: dotenv
+- **Development Tools**: nodemon
+- **Containerization**: Docker
+- **Protocol**: MCP (Model Context Protocol)
+
+## Project Architecture
+
+### Overall Architecture Diagram
+
+<Mermaid chart={`graph TB
+    subgraph "AI Systems"
+        A[Claude AI]
+        B[Other AI Systems]
+    end
+    
+    subgraph "BlockyOtters API Server MCP"
+        C[Express Server]
+        D[JSON-RPC Middleware]
+        E[MCP Schema]
+        F[API Routes]
+        G[BlockyOtters Client]
+    end
+    
+    subgraph "External Services"
+        H[BlockyOtters Free API]
+        I[BlockyOtters Pro API]
+    end
+    
+    A --> C
+    B --> C
+    C --> D
+    C --> E
+    C --> F
+    F --> G
+    G --> H
+    G --> I
+`} />
+
+### Core Components Architecture
+
+<Mermaid chart={`graph LR
+    subgraph "Core Files"
+        A[server.js<br/>Main Server]
+        B[mcp.js<br/>JSON-RPC Implementation]
+        C[mcp-schema.js<br/>MCP Tool Definitions]
+        D[test-mcp.js<br/>Test Scripts]
+    end
+    
+    subgraph "Configuration Files"
+        E[package.json<br/>Project Configuration]
+        F[.env<br/>Environment Variables]
+        G[Dockerfile<br/>Container Configuration]
+    end
+    
+    subgraph "Documentation"
+        H[README.md<br/>Project Description]
+        I[MCP_INTEGRATION.md<br/>Integration Guide]
+        J[SUMMARY.md<br/>Project Summary]
+    end
+    
+    A --> B
+    A --> C
+    B --> C
+    D --> A
+`} />
+
+## API Interface Design
+
+### RESTful API Endpoints
+
+<Mermaid chart={`graph TD
+    A[Express Server :3000] --> B[GET /]
+    A --> C[GET /api/ping]
+    A --> D[GET /api/simple/price]
+    A --> E[GET /api/simple/supported_vs_currencies]
+    A --> F[GET /api/coins/markets]
+    A --> G[GET /api/global]
+    A --> H[GET /api/search/trending]
+    A --> I[POST /rpc]
+    A --> J[GET /mcp/schema]
+    
+    B --> K[Health Check]
+    C --> L[API Status Check]
+    D --> M[Get Price Data]
+    E --> N[Get Supported Currencies]
+    F --> O[Get Market Data]
+    G --> P[Get Global Data]
+    H --> Q[Get Trending Coins]
+    I --> R[JSON-RPC 2.0 Endpoint]
+    J --> S[MCP Tool Definitions]
+`} />
+
+### MCP Tool Methods
+
+<Mermaid chart={`graph TB
+    A[MCP JSON-RPC Interface] --> B[ping<br/>Check API Status]
+    A --> C[getPrice<br/>Get Price Data]
+    A --> D[getSupportedVsCurrencies<br/>Get Supported Currencies]
+    A --> E[getCoinMarkets<br/>Get Market Data]
+    A --> F[getGlobal<br/>Get Global Data]
+    A --> G[getTrending<br/>Get Trending Coins]
+    
+    B --> H[Return API Status]
+    C --> I[Return Specified Coin Prices]
+    D --> J[Return Currency List]
+    E --> K[Return Market Details]
+    F --> L[Return Global Statistics]
+    G --> M[Return Trending Coin List]
+`} />
+
+## Data Flow
+
+### API Request Flow
+
+<Mermaid chart={`sequenceDiagram
+    participant AI as AI System
+    participant Server as Express Server
+    participant MCP as MCP Middleware
+    participant Client as BlockyOtters Client
+    participant API as BlockyOtters API
+    
+    AI->>Server: JSON-RPC Request (/rpc)
+    Server->>MCP: Route to JSON-RPC Middleware
+    MCP->>MCP: Validate Request Format
+    MCP->>Client: Call Corresponding Method
+    Client->>API: HTTP Request (Pro/Free API)
+    API-->>Client: Return Data
+    Client-->>MCP: Processed Data
+    MCP-->>Server: JSON-RPC Response
+    Server-->>AI: Return Result
+`} />
+
+### API Switching Logic
+
+<Mermaid chart={`graph TD
+    A[API Request] --> B{Check API_KEY}
+    B -->|Has API Key| C[Use Pro API]
+    B -->|No API Key| D[Use Free API]
+    
+    C --> E[pro-api.blockyotters.com]
+    D --> F[api.blockyotters.com]
+    
+    E --> G[Add x-bo-pro-api-key Header]
+    F --> H[No Auth Header Required]
+    
+    G --> I[Send Request]
+    H --> I
+    
+    I --> J[Return Data]
+`} />
+
+## File Structure Analysis
+
+### Main Directory Structure
+
+```
+BlockyOttersMCP/
+├── CG-MCP/                    # Main project directory
+│   ├── server.js              # Express server main file
+│   ├── mcp.js                 # JSON-RPC 2.0 implementation
+│   ├── mcp-schema.js          # MCP tool definitions
+│   ├── test-mcp.js            # MCP integration tests
+│   ├── package.json           # Project dependency configuration
+│   ├── bin/
+│   │   └── setup.js           # Installation setup script
+│   └── Documentation files...
+├── Dockerfile                 # Docker container configuration
+├── LICENSE                    # MIT license
+└── README.md                  # Project description
+```
+
+### Core File Functions
+
+<Mermaid chart={`mindmap
+  root((BlockyOtters MCP))
+    Core Services
+      server.js
+        Express Application
+        Route Definitions
+        Middleware Configuration
+        Health Checks
+      mcp.js
+        JSON-RPC 2.0 Server
+        Method Handlers
+        Error Handling
+        Response Formatting
+      mcp-schema.js
+        Tool Definitions
+        Parameter Schemas
+        Method Descriptions
+        Input Validation
+    Configuration
+      package.json
+        Dependencies
+        Scripts
+        Metadata
+      .env
+        API Keys
+        Environment Variables
+        Configuration Settings
+      Dockerfile
+        Container Setup
+        Build Instructions
+        Runtime Configuration
+    Testing
+      test-mcp.js
+        Integration Tests
+        Method Validation
+        Error Scenarios
+        Performance Tests
+`} />
+
+## Key Features
+
+- **Real-time Data**: Access to the latest cryptocurrency prices and market data
+- **Standardized Interface**: Unified access through MCP protocol
+- **Secure & Reliable**: Deployed in your own AWS environment
+- **High Performance**: Supports concurrent requests and caching mechanisms
+- **Multi-chain Support**: Aggregates data from multiple blockchain sources
+- **Fault Tolerance**: Built-in error handling and fallback mechanisms
+
+## Implementation Details
+
+### MCP Protocol Integration
+
+The project implements the Model Context Protocol (MCP) to provide AI systems with structured access to cryptocurrency data. The MCP layer acts as a bridge between AI assistants and the BlockyOtters API, ensuring secure and standardized data exchange.
+
+### Error Handling Strategy
+
+<Mermaid chart={`graph TD
+    A[API Request] --> B{Validate Input}
+    B -->|Invalid| C[Return Validation Error]
+    B -->|Valid| D[Process Request]
+    
+    D --> E{API Available?}
+    E -->|No| F[Return Service Error]
+    E -->|Yes| G[Make API Call]
+    
+    G --> H{Response OK?}
+    H -->|No| I[Log Error & Return]
+    H -->|Yes| J[Process Response]
+    
+    J --> K[Return Formatted Data]
+`} />
+
+### Performance Optimization
+
+- **Caching Strategy**: Implements intelligent caching for frequently requested data
+- **Connection Pooling**: Optimizes HTTP connections to external APIs
+- **Rate Limiting**: Prevents API abuse and ensures fair usage
+- **Async Processing**: Non-blocking operations for better throughput
+
+## Security Considerations
+
+- **API Key Management**: Secure storage and rotation of API credentials
+- **Input Validation**: Comprehensive validation of all incoming requests
+- **Rate Limiting**: Protection against abuse and DoS attacks
+- **HTTPS Enforcement**: Encrypted communication channels
+- **Access Control**: Proper authentication and authorization mechanisms

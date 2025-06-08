@@ -1,0 +1,126 @@
+---
+title: Project Overview
+description: BlockyOtters API Server MCP - A comprehensive blockchain data aggregation system
+---
+
+# BlockyOtters API Server MCP
+
+## Project Overview
+
+BlockyOtters API Server MCP is a Node.js and Express-based cryptocurrency data API server that implements the MCP (Model Context Protocol), enabling AI systems like Claude to access BlockyOtters' cryptocurrency market data through standardized interfaces.
+
+## Technology Stack
+
+- **Backend Framework**: Node.js + Express.js
+- **API Client**: blocky-otters-api-v3
+- **JSON-RPC**: jayson
+- **Environment Configuration**: dotenv
+- **Development Tools**: nodemon
+- **Containerization**: Docker
+- **Protocol**: MCP (Model Context Protocol)
+
+## System Architecture
+
+### Overall Architecture
+
+<Mermaid chart={`graph TB
+    subgraph "AI Systems"
+        A[Claude AI]
+        B[Other AI Systems]
+    end
+    
+    subgraph "BlockyOtters API Server MCP"
+        C[Express Server]
+        D[JSON-RPC Middleware]
+        E[MCP Schema]
+        F[API Routes]
+        G[BlockyOtters Client]
+    end
+    
+    subgraph "External Services"
+        H[BlockyOtters Free API]
+        I[BlockyOtters Pro API]
+    end
+    
+    A --> C
+    B --> C
+    C --> D
+    C --> E
+    C --> F
+    F --> G
+    G --> H
+    G --> I
+`} />
+
+### Core Components Architecture
+
+<Mermaid chart={`graph LR
+    subgraph "Core Files"
+        A[server.js<br/>Main Server]
+        B[mcp.js<br/>JSON-RPC Implementation]
+        C[mcp-schema.js<br/>MCP Tool Definitions]
+        D[test-mcp.js<br/>Test Scripts]
+    end
+    
+    subgraph "Configuration Files"
+        E[package.json<br/>Project Configuration]
+        F[.env<br/>Environment Variables]
+        G[Dockerfile<br/>Container Configuration]
+    end
+    
+    subgraph "Documentation"
+        H[README.md<br/>Project Description]
+        I[MCP_INTEGRATION.md<br/>Integration Guide]
+        J[SUMMARY.md<br/>Project Summary]
+    end
+    
+    A --> B
+    A --> C
+    B --> C
+    D --> A
+`} />
+
+## Key Features
+
+- **Real-time Data**: Access to the latest cryptocurrency prices and market data
+- **Standardized Interface**: Unified access through MCP protocol
+- **Secure & Reliable**: Deployed in your own AWS environment
+- **High Performance**: Supports concurrent requests and caching mechanisms
+- **Multi-chain Support**: Aggregates data from multiple blockchain sources
+- **Fault Tolerance**: Built-in error handling and fallback mechanisms
+
+## API Interface Design
+
+### RESTful API Endpoints
+
+<Mermaid chart={`graph TD
+    A[Express Server :3000] --> B[GET /]
+    A --> C[GET /api/ping]
+    A --> D[GET /api/simple/price]
+    A --> E[GET /api/simple/supported_vs_currencies]
+    A --> F[GET /api/coins/markets]
+    A --> G[GET /api/global]
+    A --> H[GET /api/search/trending]
+    A --> I[POST /rpc]
+    A --> J[GET /mcp/schema]
+    
+    B --> K[Health Check]
+    C --> L[API Status Check]
+    D --> M[Get Price Data]
+    E --> N[Get Supported Currencies]
+    F --> O[Get Market Data]
+    G --> P[Get Global Data]
+    H --> Q[Get Trending Data]
+    I --> R[MCP JSON-RPC Interface]
+    J --> S[MCP Schema Definition]
+`} />
+
+## Getting Started
+
+To get started with BlockyOtters API Server MCP, please refer to our detailed guides:
+
+<Cards>
+  <Card title="MCP Usage Tutorial" href="/docs/mcp-tutorial" />
+  <Card title="AWS Deployment Guide" href="/docs/aws-deployment" />
+  <Card title="API Reference" href="/docs/api-reference" />
+</Cards>
